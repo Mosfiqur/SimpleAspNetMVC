@@ -1,0 +1,11 @@
+﻿@model SimpleASPNetMVC.Models.StudentViewModel  
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome @Model.FirstName @Model.LastName</h1>  
+    <div>Balance: @Model.Balance CHF</div>
+    <div>Quota: @Model.Quota A4 Pages</div> 
+</div>

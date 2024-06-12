@@ -1,0 +1,86 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model SimpleASPNetMVC.Models.PrintViewModel
+
+@{
+    ViewData["Title"] = "Print";
+}
+
+<div>
+    <h1>Send to Print</h1>
+</div>
+
+<!-- Display validation errors -->
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger" role="alert">
+        @foreach (var key in ViewData.ModelState.Keys)
+        {
+            foreach (var error in ViewData.ModelState[key].Errors)
+            {
+                <p>@error.ErrorMessage</p>
+            }
+        } 
+    </div>
+}
+<p id="errorPara"></p>
+
+<div>
+    <form id="printForm" asp-action="SendToPrint" asp-controller="Print" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">Select File To Print (PDF only)</label>
+            <input type="file" class="form-control" id="file" name="File" accept="application/pdf" required />
+            <span asp-validation-for="File" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label for="numberOfCopies">No of Copies</label>
+            <input type="number" class="form-control" id="numberOfCopies" name="NumberOfCopies" min="1" required />
+            <span asp-validation-for="NumberOfCopies" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Send to Print</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.getElementById('printForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            var formData = new FormData(this); // Get form data
+            var errorPara = document.getElementById('errorPara'); 
+            if (errorPara) { 
+                console.log("Found Error Para"); 
+            }
+
+            // Send a request to the server to get the PDF file
+            fetch('/Print/SendToPrint', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    var contentType = response.headers.get("content-type");
+                    console.log(response.headers.get("content-type"));
+                    if (contentType === "application/pdf") {
+                        return response.blob();
+                    }
+                })
+                .then(blob => {
+                    if (blob) {
+                        // Create a blob URL for the PDF file
+                        const url = URL.createObjectURL(blob);
+                        console.log("Blob url created: " + url);
+                        window.open(url, '_blank');
+                        URL.revokeObjectURL(url);
+                        document.getElementById('printForm').reset();
+                        errorPara.innerHTML = "";
+                    }
+                    else {
+                        errorPara.innerHTML = "You don''t have enough quota.";
+                    }
+                });
+        });
+    </script>
+}
